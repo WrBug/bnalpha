@@ -1,0 +1,29 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '2.1.20'
+    id "com.github.johnrengelman.shadow" version "8.1.1"
+    id 'application'
+}
+
+group = 'com.wrbug'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4") // 协程库
+    implementation project(":base")
+}
+
+application {
+    mainClass.set("com.wrbug.bnalpha.MainKt") // 替换为你的主类
+}
+
+test {
+    useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(8)
+}
