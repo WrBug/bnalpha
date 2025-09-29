@@ -3,4 +3,6 @@ plugins {
 }
 rootProject.name = 'bnalpha'
 include ":base"
+
+//https://github.com/WrBug/kotlin_base
 project(':base').projectDir = new File('/Users/wrbug/IdeaProjects/basemodule/base')

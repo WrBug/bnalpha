@@ -2,6 +2,7 @@ package com.wrbug.bnalpha
 
 import com.wrbug.base.util.assert
 import com.wrbug.base.util.getEnv
+import com.wrbug.base.util.gt
 import com.wrbug.bnalpha.data.binance.PaymentRequest
 import com.wrbug.bnalpha.data.binance.QuoteRequest
 import kotlinx.coroutines.runBlocking
@@ -53,6 +54,9 @@ fun main() {
         }
         log("当前账号：" + profile.displayName)
         startTrading(tokenName, tokenContractAddress, chainId, amount, tradeCount)
+        log("任务执行完成，30s后查询可用资产")
+        sleep(30 * 1000)
+        checkHasAvailableBalance(chainId, tokenName, tokenContractAddress)
     }
     exitProcess(0)
 }
@@ -76,7 +80,7 @@ suspend fun startTrading(
             continue
         }
         val freeAmount = runCatching {
-            queryBuySuccess(chainId, tokenContractAddress)
+            getAvailableAssets(chainId, tokenContractAddress)
         }.getOrDefault("")
         if (freeAmount.isEmpty()) {
             continue
@@ -101,7 +105,7 @@ suspend fun startTrading(
     }
 }
 
-suspend fun queryBuySuccess(chainId: String, tokenContractAddress: String): String {
+suspend fun getAvailableAssets(chainId: String, tokenContractAddress: String): String {
     var count = 0
     while (true) {
         if (count >= 4) {
@@ -216,4 +220,26 @@ suspend fun startSell(
     }
     log("下单成功,等待成交")
     return true
+}
+
+suspend fun checkHasAvailableBalance(chainId: String, tokenName: String, tokenContractAddress: String) {
+    runCatching {
+        val assetResult = apiService.getAlphaAssets()
+        if (!assetResult.success) {
+            PushManager.send(
+                "查询${tokenName}资产失败", "请自行前往App查看${tokenName}是否已售出,msg:${assetResult.message}"
+            )
+            return
+        }
+        val result =
+            assetResult.data?.list?.find { it.chainId == chainId && it.contractAddress == tokenContractAddress }
+        if (result?.free.gt(0)) {
+            startSell(tokenName, tokenContractAddress, chainId, result?.free.orEmpty())
+            PushManager.send("卖出${tokenName}异常", "请自行前往App查看${tokenName}是否已售出")
+            return
+        }
+        log("${tokenName}已全部售出")
+    }.getOrElse {
+        PushManager.send("查询${tokenName}资产失败", "请自行前往App查看${tokenName}是否已售出")
+    }
 }

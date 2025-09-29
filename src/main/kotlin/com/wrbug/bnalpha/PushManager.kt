@@ -2,8 +2,6 @@ package com.wrbug.bnalpha
 
 import com.wrbug.base.util.createSSLSocketFactory
 import com.wrbug.base.util.getEnv
-import com.wrbug.base.util.toJson
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.URLEncoder
